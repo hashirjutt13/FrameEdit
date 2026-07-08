@@ -114,3 +114,8 @@ Record meaningful implementation decisions here. Keep entries short and dated.
 - Restyled the Flask Web UI with a Vercel/Geist-inspired design system.
 - Mapped the UI to near-white canvas, near-black ink, grey text tiers, blue focus/link states, hairline cards, compact app buttons, and minimal depth.
 - Kept the implementation buildless and cPanel-friendly by using CSS variables and local font fallbacks instead of adding a frontend build step or remote font dependency.
+
+## 2026-07-08: Preset JSON Import and Local Asset Seeding
+
+- Added a Settings import path that accepts preset/config settings as JSON, validates them through the shared preset loader, and saves them back as YAML presets.
+- Added local logo/font seeding into ignored `data/assets/` storage so project logos and brand fonts can be made available to the Web UI without committing user assets.

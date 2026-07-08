@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import secrets
 import shutil
@@ -25,7 +26,7 @@ from flask import (
 )
 
 from frameedit.pipeline import AssetType, BatchError
-from frameedit.web_services.assets import AssetError, list_assets, save_asset_upload
+from frameedit.web_services.assets import AssetError, list_assets, save_asset_upload, seed_local_assets
 from frameedit.web_services.carousel_panorama import (
     CarouselPanoramaError,
     render_carousel_panorama,
@@ -54,6 +55,7 @@ from frameedit.web_services.presets import (
     create_preset,
     delete_preset,
     duplicate_preset,
+    import_preset_json,
     list_presets,
     load_preset,
     rename_preset,
@@ -632,6 +634,23 @@ def _register_routes(app: Flask) -> None:
             flash(str(exc), "error")
             return redirect(url_for("settings"))
 
+    @app.post("/settings/presets/import-json")
+    def settings_import_preset_json():
+        try:
+            payload = _preset_json_from_request()
+            target_slug = request.form.get("target_slug", "").strip()
+            preset = import_preset_json(
+                payload,
+                Path(app.config["DATA_DIR"]),
+                target_slug=None if target_slug == "__new__" else target_slug or None,
+                fallback_slug=_json_import_fallback_slug(),
+            )
+            flash("Preset imported.", "success")
+            return redirect(url_for("settings_edit_preset", slug=preset.slug))
+        except PresetError as exc:
+            flash(str(exc), "error")
+            return redirect(url_for("settings"))
+
     @app.get("/settings/presets/<slug>")
     def settings_edit_preset(slug: str):
         try:
@@ -688,6 +707,15 @@ def _register_routes(app: Flask) -> None:
             flash("Asset uploaded.", "success")
         except (KeyError, AssetError) as exc:
             flash(str(exc), "error")
+        return redirect(url_for("settings"))
+
+    @app.post("/settings/assets/seed-local")
+    def settings_seed_local_assets():
+        result = seed_local_assets(Path(app.config["DATA_DIR"]))
+        flash(
+            f"Imported {len(result.imported)} local assets; {len(result.skipped)} already existed.",
+            "success",
+        )
         return redirect(url_for("settings"))
 
     @app.get("/download/project/<brand_slug>/<project_slug>/zip")
@@ -860,6 +888,34 @@ def _send_safe_file(base: Path, relative_path: str, *, as_attachment: bool):
     if not path_within(target, base) or not target.exists() or not target.is_file():
         abort(404)
     return send_file(target, as_attachment=as_attachment)
+
+
+def _preset_json_from_request() -> dict[str, Any]:
+    upload = request.files.get("preset_json")
+    payload = ""
+    if upload and upload.filename:
+        try:
+            payload = upload.read().decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise PresetError("Preset JSON must be UTF-8 text.") from exc
+    else:
+        payload = request.form.get("preset_json_text", "")
+    if not payload.strip():
+        raise PresetError("Choose a JSON file or paste preset JSON.")
+    try:
+        data = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise PresetError(f"Could not parse JSON: {exc.msg}") from exc
+    if not isinstance(data, dict):
+        raise PresetError("Preset JSON root must be an object.")
+    return data
+
+
+def _json_import_fallback_slug() -> str:
+    upload = request.files.get("preset_json")
+    if upload and upload.filename:
+        return slugify(Path(upload.filename).stem, fallback="imported-preset")
+    return "imported-preset"
 
 
 def _preset_form_to_raw(form) -> dict[str, Any]:

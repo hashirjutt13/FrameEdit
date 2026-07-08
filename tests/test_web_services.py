@@ -1,15 +1,16 @@
 from __future__ import annotations
 
+import yaml
 from io import BytesIO
 from pathlib import Path
 from zipfile import ZipFile
 
 from PIL import Image, ImageDraw
 
-from frameedit.web_services.assets import AssetError, list_assets, save_asset_upload
+from frameedit.web_services.assets import AssetError, list_assets, save_asset_upload, seed_local_assets
 from frameedit.web_services.carousel_panorama import CarouselPanoramaError, render_carousel_panorama
 from frameedit.web_services.grid_mosaic import render_grid_mosaic
-from frameedit.web_services.presets import create_preset, list_presets, load_preset
+from frameedit.web_services.presets import create_preset, import_preset_json, list_presets, load_preset
 from frameedit.web_services.projects import (
     ProjectGridError,
     create_project_dir,
@@ -54,6 +55,28 @@ def test_preset_load_and_create(tmp_path: Path) -> None:
     }
 
 
+def test_import_preset_json_creates_and_updates_presets(tmp_path: Path) -> None:
+    root = tmp_path / "data"
+    source_path = write_test_preset(root)
+    raw = yaml.safe_load(source_path.read_text(encoding="utf-8"))
+    raw["brand"] = {"name": "Imported Brand", "slug": "imported-brand"}
+    raw["post"]["logo"]["scale"] = 0.33
+
+    imported = import_preset_json({"settings": raw}, root)
+
+    assert imported.slug == "imported-brand"
+    assert imported.name == "Imported Brand"
+    assert imported.config.post.logo.scale == 0.33
+
+    raw["brand"] = {"name": "Updated Test Brand", "slug": "ignored-brand"}
+    raw["post"]["logo"]["scale"] = 0.44
+    updated = import_preset_json(raw, root, target_slug="test-brand")
+
+    assert updated.slug == "test-brand"
+    assert updated.name == "Updated Test Brand"
+    assert load_preset("test-brand", root).config.post.logo.scale == 0.44
+
+
 def test_asset_upload_validation_and_listing(tmp_path: Path) -> None:
     root = tmp_path / "data"
     saved = save_asset_upload(DummyUpload("../../Logo.PNG", b"png"), "logos", root)
@@ -66,6 +89,39 @@ def test_asset_upload_validation_and_listing(tmp_path: Path) -> None:
         assert ".otf" in str(exc)
     else:
         raise AssertionError("Expected AssetError")
+
+
+def test_seed_local_assets_imports_logo_and_font_files(tmp_path: Path) -> None:
+    root = tmp_path / "data"
+    source = tmp_path / "source"
+    (source / "brand").mkdir(parents=True)
+    (source / "logos").mkdir(parents=True)
+    (source / "assets" / "fonts").mkdir(parents=True)
+    (source / "output").mkdir()
+    (source / "brand" / "main-logo.svg").write_text("<svg></svg>", encoding="utf-8")
+    (source / "logos" / "brand-mark.png").write_bytes(b"png")
+    (source / "assets" / "fonts" / "display.otf").write_bytes(b"font")
+    (source / "output" / "ignored-logo.png").write_bytes(b"ignored")
+
+    result = seed_local_assets(root, source_root=source)
+
+    assert {record.name for record in result.imported} == {
+        "brand-mark.png",
+        "display.otf",
+        "main-logo.svg",
+    }
+    assert (root / "assets" / "logos" / "main-logo.svg").exists()
+    assert (root / "assets" / "logos" / "brand-mark.png").exists()
+    assert (root / "assets" / "fonts" / "display.otf").exists()
+    assert not (root / "assets" / "logos" / "ignored-logo.png").exists()
+
+    again = seed_local_assets(root, source_root=source)
+    assert not again.imported
+    assert {record.name for record in again.skipped} == {
+        "brand-mark.png",
+        "display.otf",
+        "main-logo.svg",
+    }
 
 
 def test_project_metadata_and_zip(tmp_path: Path) -> None:
