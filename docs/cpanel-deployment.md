@@ -122,6 +122,8 @@ CPANEL_VENV_PATH=/home/ismails1/virtualenv/framekit/3.13
 
 The workflow excludes runtime folders such as `data/`, `input/`, `output/`, `.venv/`, and `.htaccess` from the application-code sync so deploys do not overwrite generated projects or cPanel-managed server config. It then separately syncs bundled presets and deployable brand assets from `data/presets/` and `data/assets/` into `REMOTE_DATA_PATH` without deleting existing runtime uploads. As a compatibility fallback for cPanel environments that still point at the in-app data directory, it also mirrors those bundled presets and assets into `REMOTE_PATH/data/`. It checks SSH connectivity before syncing files so authentication problems are easier to diagnose.
 
+During deploy, the workflow installs the current project into the cPanel app virtualenv and verifies `pillow-heif` with the shared image opener before restarting Passenger. If `CPANEL_VENV_PATH` is missing or stale, it tries common cPanel virtualenv paths under `~/virtualenv/`; if no app Python can be found, the deploy fails instead of silently skipping dependency installation.
+
 ## Smoke Check
 
 After deployment:

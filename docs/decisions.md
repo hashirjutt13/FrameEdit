@@ -126,3 +126,8 @@ Record meaningful implementation decisions here. Keep entries short and dated.
 - Added a `Mahogany Furniture` preset that references tracked Mahogany logo, Migra product font, and Sloop category font assets.
 - Updated the cPanel workflow to sync bundled presets, logos, fonts, vignettes, and overlays into runtime data without deleting existing uploads or projects.
 - Updated the Passenger entrypoint to default to the sibling `framekit-data` runtime directory when cPanel does not set `FRAMEEDIT_DATA_DIR`.
+
+## 2026-07-08: cPanel Virtualenv Verification
+
+- Updated the cPanel deploy workflow to auto-detect the app Python virtualenv when `CPANEL_VENV_PATH` is missing or stale.
+- Made deploys install the current project into the detected virtualenv, verify `pillow-heif` through the shared HEIC image opener, and fail instead of silently skipping remote dependency installation.

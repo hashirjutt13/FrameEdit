@@ -180,13 +180,51 @@ jobs:
             "${REMOTE_DATA_PATH}/carousels" \
             "${REMOTE_DATA_PATH}/temp"
 
-          if [ -n "${CPANEL_VENV_PATH}" ] && [ -x "${CPANEL_VENV_PATH}/bin/python" ]; then
-            "${CPANEL_VENV_PATH}/bin/python" -m pip install --upgrade pip
-            "${CPANEL_VENV_PATH}/bin/python" -m pip install -e .
-          else
-            echo "CPANEL_VENV_PATH is not set or does not contain bin/python; skipping remote pip install."
-            echo "Set CPANEL_VENV_PATH to the cPanel Python app virtualenv path to install dependencies automatically."
+          REMOTE_PYTHON=""
+          try_python() {
+            if [ -z "${REMOTE_PYTHON}" ] && [ -x "$1" ]; then
+              REMOTE_PYTHON="$1"
+            fi
+          }
+
+          if [ -n "${CPANEL_VENV_PATH}" ]; then
+            try_python "${CPANEL_VENV_PATH}/bin/python"
           fi
+
+          for candidate in \
+            "${HOME}/virtualenv/$(basename "${REMOTE_PATH}")"/*/bin/python \
+            "${HOME}/virtualenv/framekit"/*/bin/python \
+            "${HOME}/virtualenv"/*/*/bin/python; do
+            try_python "${candidate}"
+          done
+
+          if [ -z "${REMOTE_PYTHON}" ]; then
+            echo "Could not find the cPanel Python virtualenv."
+            echo "Set CPANEL_VENV_PATH to the app virtualenv path, for example: ${HOME}/virtualenv/framekit/3.13"
+            exit 1
+          fi
+
+          echo "Using cPanel Python: ${REMOTE_PYTHON}"
+          "${REMOTE_PYTHON}" -m pip install --upgrade pip
+          "${REMOTE_PYTHON}" -m pip install -e .
+          "${REMOTE_PYTHON}" - <<'PY'
+          from pathlib import Path
+          from tempfile import TemporaryDirectory
+
+          from PIL import Image
+          import pillow_heif
+
+          from frameedit.image_ops import open_oriented_image
+
+          print(f"Verified pillow-heif {pillow_heif.__version__}")
+          print(f"Verified frameedit source {Path(open_oriented_image.__code__.co_filename).resolve()}")
+
+          with TemporaryDirectory() as temp_dir:
+              source = Path(temp_dir) / "probe.heic"
+              Image.new("RGB", (3, 4), "red").save(source, format="PNG")
+              image = open_oriented_image(source)
+              assert image.size == (3, 4)
+          PY
 
           mkdir -p tmp
           touch tmp/restart.txt
