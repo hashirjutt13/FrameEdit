@@ -22,6 +22,9 @@ def register_heif_support() -> bool:
 
 
 def open_oriented_image(path: Path) -> Image.Image:
+    if path.suffix.lower() in {".heic", ".heif"} and not register_heif_support():
+        raise OSError("HEIC/HEIF input found, but pillow-heif is not installed.")
+
     with Image.open(path) as image:
         return ImageOps.exif_transpose(image).convert("RGBA")
 
