@@ -29,7 +29,7 @@ Optional variables:
 WEB_UI_PASSWORD=your-password
 WEB_UI_SECRET_KEY=long-random-secret
 WEB_UI_MAX_UPLOAD_MB=512
-FRAMEEDIT_DATA_DIR=/home/your-account/frameedit-data
+FRAMEEDIT_DATA_DIR=/home/ismails1/framekit-data
 ```
 
 If `WEB_UI_PASSWORD` is empty or missing, the UI is not password protected.
@@ -56,13 +56,13 @@ temp/
 Upload brand assets to runtime storage, for example:
 
 ```text
-/home/your-account/frameedit-data/assets/logos/brand-logo.png
-/home/your-account/frameedit-data/assets/fonts/product-font.otf
-/home/your-account/frameedit-data/assets/fonts/category-font.ttf
-/home/your-account/frameedit-data/assets/vignettes/centered.png
-/home/your-account/frameedit-data/assets/vignettes/top.png
-/home/your-account/frameedit-data/assets/vignettes/bottom.png
-/home/your-account/frameedit-data/assets/overlays/black_9x16.png
+/home/ismails1/framekit-data/assets/logos/brand-logo.png
+/home/ismails1/framekit-data/assets/fonts/product-font.otf
+/home/ismails1/framekit-data/assets/fonts/category-font.ttf
+/home/ismails1/framekit-data/assets/vignettes/centered.png
+/home/ismails1/framekit-data/assets/vignettes/top.png
+/home/ismails1/framekit-data/assets/vignettes/bottom.png
+/home/ismails1/framekit-data/assets/overlays/black_9x16.png
 ```
 
 Then update the preset YAML to point at those files. Relative paths are resolved from the preset file's directory:
@@ -87,9 +87,21 @@ reel_cover:
     font: ../assets/fonts/category-font.ttf
 ```
 
-## Manual GitHub Actions Deploy
+## GitHub Actions Auto Deploy
 
-The repository includes `.github/workflows/deploy-cpanel.yml` as an opt-in manual workflow.
+The repository includes `.github/workflows/deploy-cpanel.yml`. It deploys automatically whenever `main` is pushed, and it can also be run manually from the GitHub Actions tab.
+
+The workflow deploys code to:
+
+```text
+/home/ismails1/framekit
+```
+
+Runtime data is kept outside the deployed code at:
+
+```text
+/home/ismails1/framekit-data
+```
 
 Set these repository secrets before running it:
 
@@ -104,12 +116,10 @@ Optional secrets:
 ```text
 CPANEL_SSH_PORT=22
 CPANEL_SSH_KNOWN_HOSTS=known_hosts line for the cPanel server
-CPANEL_VENV_PATH=/home/your-account/virtualenv/frameedit/3.13
+CPANEL_VENV_PATH=/home/ismails1/virtualenv/framekit/3.13
 ```
 
-Before using the workflow, edit the `REMOTE_PATH` and `REMOTE_DATA_PATH` values in `.github/workflows/deploy-cpanel.yml` for your server.
-
-The workflow excludes runtime folders such as `data/`, `input/`, `output/`, `.venv/`, and `.htaccess` so deploys do not overwrite uploads, generated projects, or cPanel-managed server config.
+The workflow excludes runtime folders such as `data/`, `input/`, `output/`, `.venv/`, and `.htaccess` so deploys do not overwrite uploads, generated projects, or cPanel-managed server config. It also checks SSH connectivity before syncing files so authentication problems are easier to diagnose.
 
 ## Smoke Check
 

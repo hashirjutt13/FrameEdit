@@ -1,10 +1,13 @@
 name: Deploy to cPanel
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 concurrency:
-  group: cpanel-frameedit-deploy
+  group: cpanel-framekit-deploy
   cancel-in-progress: true
 
 permissions:
@@ -12,8 +15,8 @@ permissions:
 
 env:
   PYTHON_VERSION: "3.13"
-  REMOTE_PATH: /home/your-account/frameedit
-  REMOTE_DATA_PATH: /home/your-account/frameedit-data
+  REMOTE_PATH: /home/ismails1/framekit
+  REMOTE_DATA_PATH: /home/ismails1/framekit-data
 
 jobs:
   deploy:
@@ -30,10 +33,10 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
@@ -76,13 +79,21 @@ jobs:
             ssh-keyscan -p "${CPANEL_SSH_PORT}" "${CPANEL_SSH_HOST}" >> ~/.ssh/known_hosts
           fi
 
+      - name: Check SSH connection
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/cpanel_deploy_key -p "${CPANEL_SSH_PORT}" \
+            "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}" \
+            "whoami && pwd"
+
       - name: Ensure remote app directory exists
         run: |
           set -euo pipefail
 
           ssh -i ~/.ssh/cpanel_deploy_key -p "${CPANEL_SSH_PORT}" \
             "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}" \
-            "mkdir -p '${REMOTE_PATH}' '${REMOTE_DATA_PATH}'"
+            "mkdir -p '${REMOTE_PATH}' '${REMOTE_DATA_PATH}' && test -d '${REMOTE_PATH}' && test -d '${REMOTE_DATA_PATH}'"
 
       - name: Sync code to cPanel
         run: |
