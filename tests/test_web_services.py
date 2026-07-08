@@ -12,9 +12,11 @@ from frameedit.web_services.carousel_panorama import CarouselPanoramaError, rend
 from frameedit.web_services.grid_mosaic import render_grid_mosaic
 from frameedit.web_services.presets import create_preset, import_preset_json, list_presets, load_preset
 from frameedit.web_services.projects import (
+    ProjectError,
     ProjectGridError,
     create_project_dir,
     default_grid_layout,
+    delete_project,
     list_projects,
     project_grid_candidates,
     project_grid_layout,
@@ -153,6 +155,51 @@ def test_project_metadata_and_zip(tmp_path: Path) -> None:
     assert list_projects(root=root, query="eclat")[0].path == project_path
     with ZipFile(zip_path) as archive:
         assert "eclat-console-test-brand/posts_instagram/eclat-console-post-01.png" in archive.namelist()
+
+
+def test_delete_project_removes_folder_and_rejects_invalid_paths(tmp_path: Path) -> None:
+    root = tmp_path / "data"
+    project_path = create_project_dir(
+        brand_name="Test Brand",
+        brand_slug="test-brand",
+        product_name="DELETE ME",
+        root=root,
+    )
+    output = project_path / "posts_instagram" / "delete-me-post-01.png"
+    output.parent.mkdir(parents=True)
+    output.write_bytes(b"fake")
+    write_project_metadata(
+        project_path,
+        brand_name="Test Brand",
+        brand_slug="test-brand",
+        product_name="DELETE ME",
+        zip_path=None,
+        outputs=[output],
+    )
+
+    delete_project("test-brand", project_path.name, root=root)
+
+    assert not project_path.exists()
+
+    try:
+        delete_project("test-brand", project_path.name, root=root)
+    except ProjectError as exc:
+        assert "does not exist" in str(exc)
+    else:
+        raise AssertionError("Expected ProjectError")
+
+    outside = root / "outside-project"
+    outside.mkdir(parents=True)
+    (outside / "project.yaml").write_text("name: outside\n", encoding="utf-8")
+
+    try:
+        delete_project("..", "outside-project", root=root)
+    except ProjectError as exc:
+        assert "does not exist" in str(exc)
+    else:
+        raise AssertionError("Expected ProjectError")
+
+    assert outside.exists()
 
 
 def test_grid_mosaic_split_bleed_and_zip(tmp_path: Path) -> None:

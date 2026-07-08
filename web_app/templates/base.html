@@ -54,6 +54,12 @@
         if (!(form instanceof HTMLFormElement)) return;
         if (!form.checkValidity()) return;
 
+        const confirmMessage = form.dataset.confirmMessage || "";
+        if (confirmMessage && !window.confirm(confirmMessage)) {
+          event.preventDefault();
+          return;
+        }
+
         const message = form.dataset.loadingMessage || "Please wait while the images process.";
         const overlay = document.getElementById("page-busy");
         const overlayMessage = document.getElementById("page-busy-message");

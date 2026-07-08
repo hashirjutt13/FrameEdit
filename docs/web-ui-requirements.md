@@ -183,6 +183,7 @@ Required behavior:
 - Open a saved project.
 - Download the ZIP again.
 - View individual generated files.
+- Delete saved All In One projects permanently.
 
 ### Settings
 

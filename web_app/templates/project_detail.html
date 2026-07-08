@@ -7,9 +7,14 @@
       <h1>{{ project.product_name }}</h1>
       <p class="muted">{{ project.brand_name }} · {{ project.created_at }}</p>
     </div>
-    {% if project.zip_path %}
-      <a class="button" href="{{ url_for('download_project_zip', brand_slug=project.brand_slug, project_slug=project.path.name) }}">Download ZIP</a>
-    {% endif %}
+    <div class="actions">
+      {% if project.zip_path %}
+        <a class="button" href="{{ url_for('download_project_zip', brand_slug=project.brand_slug, project_slug=project.path.name) }}">Download ZIP</a>
+      {% endif %}
+      <form class="inline-form" action="{{ url_for('project_delete', brand_slug=project.brand_slug, project_slug=project.path.name) }}" method="post" data-confirm-message="Delete this saved project? This cannot be undone." data-loading-message="Deleting saved project.">
+        <button class="danger" type="submit" data-loading-text="Deleting...">Delete</button>
+      </form>
+    </div>
   </div>
   <div class="preview-grid">
     {% for file in files %}

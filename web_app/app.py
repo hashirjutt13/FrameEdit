@@ -62,8 +62,10 @@ from frameedit.web_services.presets import (
     save_preset,
 )
 from frameedit.web_services.projects import (
+    ProjectError,
     ProjectGridError,
     create_project_dir,
+    delete_project,
     list_projects,
     load_project,
     project_grid_candidates,
@@ -611,6 +613,15 @@ def _register_routes(app: Flask) -> None:
         except ProjectGridError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify({"layout": project_grid_layout(project)})
+
+    @app.post("/projects/<brand_slug>/<project_slug>/delete")
+    def project_delete(brand_slug: str, project_slug: str):
+        try:
+            delete_project(brand_slug, project_slug, root=Path(app.config["DATA_DIR"]))
+            flash("Project deleted.", "success")
+        except ProjectError as exc:
+            flash(str(exc), "error")
+        return redirect(url_for("recent_projects"))
 
     @app.get("/settings")
     def settings():

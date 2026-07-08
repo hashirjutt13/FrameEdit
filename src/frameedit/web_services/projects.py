@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shutil
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
@@ -9,7 +10,7 @@ from typing import Any
 
 import yaml
 
-from .paths import ensure_data_dirs
+from .paths import ensure_data_dirs, path_within
 from .slugs import slugify
 
 
@@ -36,6 +37,10 @@ class GridCandidate:
 
 class ProjectGridError(ValueError):
     """Raised when a saved grid layout is invalid for the project."""
+
+
+class ProjectError(ValueError):
+    """Raised when a saved All In One project cannot be managed."""
 
 
 def projects_dir(root: Path | None = None) -> Path:
@@ -209,6 +214,14 @@ def save_project_grid_layout(project_path: Path, layout: list[str]) -> ProjectRe
         encoding="utf-8",
     )
     return load_project(project_path)
+
+
+def delete_project(brand_slug: str, project_slug: str, *, root: Path | None = None) -> None:
+    base = projects_dir(root)
+    target = base / brand_slug / project_slug
+    if not path_within(target, base) or not (target / "project.yaml").exists():
+        raise ProjectError("Saved project does not exist.")
+    shutil.rmtree(target)
 
 
 def _grid_candidate_kind(relative_path: str) -> str:

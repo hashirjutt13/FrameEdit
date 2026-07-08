@@ -131,3 +131,8 @@ Record meaningful implementation decisions here. Keep entries short and dated.
 
 - Updated the cPanel deploy workflow to auto-detect the app Python virtualenv when `CPANEL_VENV_PATH` is missing or stale.
 - Made deploys install the current project into the detected virtualenv, verify `pillow-heif` through the shared HEIC image opener, and fail instead of silently skipping remote dependency installation.
+
+## 2026-07-09: All In One Previous Work Deletion
+
+- Added permanent deletion for saved All In One project folders from Previous Work and project detail pages.
+- Kept deletion scoped to `data/projects/` and guarded by project metadata plus path containment checks.

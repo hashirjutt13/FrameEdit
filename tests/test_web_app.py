@@ -75,6 +75,47 @@ def test_previous_work_is_under_all_in_one_nav(app) -> None:
     assert b'>Recent</a>' not in response.data
 
 
+def test_previous_work_can_delete_saved_project(app) -> None:
+    client = app.test_client()
+    root = app.config["DATA_DIR"]
+    project_path = create_project_dir(
+        brand_name="Test Brand",
+        brand_slug="test-brand",
+        product_name="DELETE ME",
+        root=root,
+    )
+    output = project_path / "posts_instagram" / "delete-me-post-01.png"
+    output.parent.mkdir(parents=True)
+    output.write_bytes(b"fake")
+    write_project_metadata(
+        project_path,
+        brand_name="Test Brand",
+        brand_slug="test-brand",
+        product_name="DELETE ME",
+        zip_path=None,
+        outputs=[output],
+    )
+
+    response = client.get("/recent")
+
+    assert response.status_code == 200
+    assert b"DELETE ME" in response.data
+    assert b"Delete this saved project? This cannot be undone." in response.data
+    assert f'action="/projects/test-brand/{project_path.name}/delete"'.encode() in response.data
+
+    delete_response = client.post(
+        f"/projects/test-brand/{project_path.name}/delete",
+        follow_redirects=True,
+    )
+
+    assert delete_response.status_code == 200
+    assert b"Project deleted." in delete_response.data
+    assert not project_path.exists()
+    assert list_projects(root=root) == []
+    assert client.get(f"/projects/test-brand/{project_path.name}").status_code == 404
+    assert client.get(f"/download/project/test-brand/{project_path.name}/zip").status_code == 404
+
+
 def test_auth_gate_when_password_enabled(tmp_path: Path) -> None:
     root = tmp_path / "data"
     write_test_preset(root)
