@@ -24,7 +24,7 @@ post:
     top: ../assets/vignettes/top.png
     bottom: ../assets/vignettes/bottom.png
   logo:
-    file: ../assets/logos/mahogany-logo-original-no-bg.png
+    file: ../assets/logos/mahogany-live-logo.png
     scale: 0.23
     center:
     - 540
@@ -48,7 +48,7 @@ reel_cover:
     file: ../assets/overlays/black_9x16.png
     opacity: 0.6
   logo:
-    file: ../assets/logos/mahogany-logo-original-no-bg.png
+    file: ../assets/logos/mahogany-live-logo.png
     scale: 0.23
     center:
     - 540
