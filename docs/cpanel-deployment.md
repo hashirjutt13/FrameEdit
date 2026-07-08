@@ -35,6 +35,7 @@ FRAMEEDIT_DATA_DIR=/home/ismails1/framekit-data
 If `WEB_UI_PASSWORD` is empty or missing, the UI is not password protected.
 
 Use `FRAMEEDIT_DATA_DIR` when you want uploads, presets, generated projects, and ZIP files outside the deployed code directory.
+On Passenger/cPanel, `passenger_wsgi.py` automatically uses a sibling `framekit-data` directory when `FRAMEEDIT_DATA_DIR` is not set and that directory exists.
 
 ## Runtime Folders
 

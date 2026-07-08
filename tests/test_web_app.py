@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 
@@ -98,6 +99,23 @@ def test_auth_gate_when_password_enabled(tmp_path: Path) -> None:
     response = client.post("/login", data={"password": "secret"}, follow_redirects=True)
     assert response.status_code == 200
     assert b"All In One Edit" in response.data
+
+
+def test_passenger_wsgi_defaults_to_sibling_data_dir(monkeypatch, tmp_path: Path) -> None:
+    from passenger_wsgi import configure_data_dir
+
+    project_root = tmp_path / "framekit"
+    external_data = tmp_path / "framekit-data"
+    project_root.mkdir()
+    external_data.mkdir()
+
+    monkeypatch.delenv("FRAMEEDIT_DATA_DIR", raising=False)
+    configure_data_dir(project_root)
+    assert os.environ["FRAMEEDIT_DATA_DIR"] == str(external_data)
+
+    monkeypatch.setenv("FRAMEEDIT_DATA_DIR", str(tmp_path / "custom-data"))
+    configure_data_dir(project_root)
+    assert os.environ["FRAMEEDIT_DATA_DIR"] == str(tmp_path / "custom-data")
 
 
 def test_settings_imports_preset_json_and_local_assets(app) -> None:
