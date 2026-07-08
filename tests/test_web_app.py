@@ -192,8 +192,8 @@ def test_all_in_one_preview_and_generate_zip(app) -> None:
     assert b"Instagram Grid Preview" in response.data
     assert b"data-instagram-grid" in response.data
     assert b'data-crop-mode="profile"' in response.data
-    assert b"Profile Grid 3:4" in response.data
-    assert b"Feed Crop 4:5" in response.data
+    assert b"Profile 3:4" in response.data
+    assert b"Feed 4:5" in response.data
 
     project = list_projects(root=app.config["DATA_DIR"])[0]
     save_grid = client.post(
