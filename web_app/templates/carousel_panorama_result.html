@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block title %}Carousel Panorama Generated{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="split-head">
+    <div>
+      <h1>{{ carousel.name }}</h1>
+      <p class="muted">{{ carousel.source_size[0] }} x {{ carousel.source_size[1] }} source · {{ carousel.working_canvas_size[0] }} x {{ carousel.working_canvas_size[1] }} panorama canvas · {{ carousel.slide_size[0] }} x {{ carousel.slide_size[1] }} slides</p>
+    </div>
+    <div class="actions">
+      {% if carousel.zip_path %}
+        <a class="button" href="{{ url_for('download_carousel_zip', carousel_slug=carousel.path.name) }}">Download ZIP</a>
+      {% endif %}
+      <form class="inline-form" action="{{ url_for('carousel_panorama_delete', carousel_slug=carousel.path.name) }}" method="post">
+        <button class="danger" type="submit">Delete</button>
+      </form>
+    </div>
+  </div>
+  <div class="carousel-preview" data-slide-format="{{ carousel.slide_format }}">
+    {% for slide in files %}
+      <figure>
+        <img src="{{ url_for('carousel_file', carousel_slug=carousel.path.name, relative_path=slide.relative_path) }}" alt="{{ slide.label }}">
+        <figcaption>{{ slide.label }}</figcaption>
+      </figure>
+    {% endfor %}
+  </div>
+  <div class="mosaic-meta">
+    <span>{{ carousel.format_label }} · {{ carousel.aspect_ratio }}</span>
+    <span>{{ carousel.slide_count }} slides</span>
+    <span>Upload left to right</span>
+    <span>{{ carousel.fit_mode|capitalize }} resize</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h1>Slide Files</h1>
+  <div class="upload-order-list">
+    {% for slide in files %}
+      <article class="upload-order-item">
+        <img src="{{ url_for('carousel_file', carousel_slug=carousel.path.name, relative_path=slide.relative_path) }}" alt="{{ slide.label }}">
+        <div>
+          <strong>{{ slide.label }}</strong>
+          <span>Upload {{ "%02d"|format(slide.upload_order) }}</span>
+        </div>
+        <a href="{{ url_for('download_carousel_file', carousel_slug=carousel.path.name, relative_path=slide.relative_path) }}">Download</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

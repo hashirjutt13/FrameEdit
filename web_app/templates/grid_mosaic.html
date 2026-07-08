@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Grid Mosaic{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Grid Mosaic</h1>
+  <form action="{{ url_for('grid_mosaic_generate') }}" method="post" enctype="multipart/form-data" class="grid-form" data-loading-message="Creating the grid mosaic tiles.">
+    <label>
+      Mosaic name
+      <input name="mosaic_name" placeholder="Collection launch">
+    </label>
+    <label>
+      Tile format
+      <select name="tile_format" data-grid-tile-format>
+        <option value="profile_3x4">3:4 profile-native · 1080 x 1440 tiles · 3240 x 1440 source</option>
+        <option value="feed_4x5">4:5 feed-safe · 1080 x 1350 tiles</option>
+      </select>
+    </label>
+    <label>
+      Source mode
+      <select name="source_mode" data-grid-source-mode>
+        <option value="profile">3:4 profile-native source · 3240 x 1440</option>
+      </select>
+    </label>
+    <label>
+      Resize behavior
+      <select name="fit_mode">
+        <option value="crop">Crop/resize to selected canvas</option>
+        <option value="stretch">Stretch resize to selected canvas</option>
+      </select>
+    </label>
+    <label class="wide">
+      Horizontal source image
+      <input type="file" name="image" required accept=".jpg,.jpeg,.png,.webp,.heic,.heif">
+    </label>
+    <button type="submit" data-loading-text="Generating...">Generate Grid Mosaic</button>
+  </form>
+</section>
+{% endblock %}
+{% block scripts %}
+<script>
+  const gridSourceModes = {
+    profile_3x4: [
+      ["profile", "3:4 profile-native source · 3240 x 1440"]
+    ],
+    feed_4x5: [
+      ["bleed", "4:5 bleed source · 3106 x 1350"]
+    ]
+  };
+
+  function updateGridSourceMode() {
+    const tileFormat = document.querySelector("[data-grid-tile-format]");
+    const sourceMode = document.querySelector("[data-grid-source-mode]");
+    if (!(tileFormat instanceof HTMLSelectElement) || !(sourceMode instanceof HTMLSelectElement)) return;
+
+    const modes = gridSourceModes[tileFormat.value] || gridSourceModes.profile_3x4;
+    const previous = sourceMode.value;
+    sourceMode.replaceChildren();
+    for (const [value, label] of modes) {
+      sourceMode.add(new Option(label, value));
+    }
+    if (modes.some(([value]) => value === previous)) {
+      sourceMode.value = previous;
+    }
+
+  }
+
+  document.addEventListener("DOMContentLoaded", updateGridSourceMode);
+  document.addEventListener("change", function (event) {
+    if (event.target instanceof HTMLSelectElement && event.target.matches("[data-grid-tile-format]")) {
+      updateGridSourceMode();
+    }
+  });
+</script>
+{% endblock %}

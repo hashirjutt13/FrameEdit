@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Reel Cover Edit{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Reel Cover Edit</h1>
+  <form action="{{ url_for('reel_cover_preview') }}" method="post" enctype="multipart/form-data" class="grid-form" data-loading-message="Uploading and generating the reel cover.">
+    <label>
+      Brand preset
+      <select name="preset_slug">
+        {% for preset in presets %}
+          <option value="{{ preset.slug }}">{{ preset.name }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>
+      Product name
+      <input name="product_name" required placeholder="ECLAT CONSOLE">
+    </label>
+    <label>
+      Category name
+      <input name="category_name" required placeholder="Consoles">
+    </label>
+    <label class="wide">
+      Reel cover photo
+      <input type="file" name="image" required accept=".jpg,.jpeg,.png,.webp,.heic,.heif">
+    </label>
+    <button type="submit" data-loading-text="Generating...">Generate Reel Cover</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,82 @@
+brand:
+  name: Starter Brand
+  slug: starter-brand
+input_dir: ../../input
+output_dir: ../../output
+scan_recursive: false
+aspect_ratio_tolerance: 0.02
+overwrite: true
+supported_extensions:
+- .jpg
+- .jpeg
+- .png
+- .webp
+- .heic
+- .heif
+post:
+  size:
+  - 1080
+  - 1440
+  default_vignette: centered
+  vignette_opacity: 1.0
+  vignettes:
+    centered: ../../assets/vignettes/centered.png
+    top: ../../assets/vignettes/top.png
+    bottom: ../../assets/vignettes/bottom.png
+  logo:
+    file: ../../assets/logo-placeholder.png
+    scale: 0.22
+    center:
+    - 540
+    - 100
+    opacity: 1.0
+webp_variant:
+  enabled: true
+  include_logo: true
+  lossless: true
+  quality: 100
+  method: 6
+reel_cover:
+  size:
+  - 1080
+  - 1920
+  background_blur:
+    enabled: true
+    intensity: 0.06
+    max_radius: 100
+  black_overlay:
+    file: ../../assets/black_9x16.png
+    opacity: 0.6
+  logo:
+    file: ../../assets/logo-placeholder.png
+    scale: 0.22
+    center:
+    - 540
+    - 342
+    opacity: 1.0
+  product_name:
+    text: SIGNATURE CHAIR
+    font:
+    size: 115
+    center:
+    - 540
+    - 955
+    color: '#e1d9cb'
+    auto_multiline: true
+    max_width: 720
+    line_spacing: 1.18
+    letter_spacing: 150
+    last_word_second_line: true
+  category_name:
+    text: Seating
+    font:
+    size: 120
+    center:
+    - 540
+    - 1641
+    color: '#e1d9cb'
+    auto_multiline: false
+    max_width:
+    line_spacing: 1.05
+    letter_spacing: 0
+    last_word_second_line: false

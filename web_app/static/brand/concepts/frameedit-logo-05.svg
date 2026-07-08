@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 120" role="img" aria-labelledby="title desc">
+  <title id="title">FrameEdit logo concept 05</title>
+  <desc id="desc">Horizontal FrameEdit wordmark with an angular crop cursor mark.</desc>
+  <g fill="none" fill-rule="evenodd">
+    <path stroke="#121513" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M26 31h86v58H26z"/>
+    <path stroke="#1769ff" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" d="M50 21v78M50 60h86"/>
+    <path fill="#121513" d="M115 74l26 25-17 5-5 17-25-26 21-21Z"/>
+    <text x="170" y="80" fill="#121513" font-family="Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="68" font-weight="760" letter-spacing="0">FrameEdit</text>
+  </g>
+</svg>

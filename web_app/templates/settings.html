@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Settings</h1>
+  <div class="settings-grid">
+    <section>
+      <h2>Brand Presets</h2>
+      <form action="{{ url_for('settings_create_preset') }}" method="post" class="inline-form" data-loading-message="Creating preset.">
+        <input name="name" placeholder="New brand name" required>
+        <button type="submit">Create</button>
+      </form>
+      <div class="list">
+        {% for preset in presets %}
+          <article class="row-card">
+            <div>
+              <strong>{{ preset.name }}</strong>
+              <span>{{ preset.slug }}</span>
+            </div>
+            <div class="actions">
+              <a href="{{ url_for('settings_edit_preset', slug=preset.slug) }}">Edit</a>
+          <form action="{{ url_for('settings_duplicate_preset', slug=preset.slug) }}" method="post" data-loading-message="Duplicating preset.">
+                <button class="link" type="submit">Duplicate</button>
+              </form>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </section>
+
+    <section>
+      <h2>Assets</h2>
+      {% for kind, assets in asset_groups.items() %}
+        <form action="{{ url_for('settings_upload_asset', kind=kind) }}" method="post" enctype="multipart/form-data" class="asset-form" data-loading-message="Uploading asset.">
+          <label>
+            {{ kind|title }}
+            <input type="file" name="asset" required>
+          </label>
+          <button type="submit">Upload</button>
+        </form>
+        <ul class="asset-list">
+          {% for asset in assets %}
+            <li>{{ asset.path }}</li>
+          {% else %}
+            <li class="muted">No uploaded {{ kind }} yet.</li>
+          {% endfor %}
+        </ul>
+      {% endfor %}
+    </section>
+  </div>
+</section>
+{% endblock %}

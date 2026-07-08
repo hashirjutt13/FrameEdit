@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Grid Mosaic Generated{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="split-head">
+    <div>
+      <h1>Grid Mosaic Generated</h1>
+      <p class="muted">{{ result.source_size[0] }} x {{ result.source_size[1] }} source · {{ result.working_canvas_size[0] }} x {{ result.working_canvas_size[1] }} working canvas · {{ result.output_tile_size[0] }} x {{ result.output_tile_size[1] }} outputs</p>
+    </div>
+    <div class="actions">
+      <a class="button" href="{{ url_for('download_temp_file', job_id=job_id, relative_path=zip_path|relpath(data_root ~ '/temp/' ~ job_id)) }}">Download ZIP</a>
+    </div>
+  </div>
+  <div class="mosaic-preview" data-tile-format="{{ result.tile_format }}">
+    {% for tile in result.tiles|sort(attribute='display_order') %}
+      <figure>
+        <img src="{{ url_for('temp_file', job_id=job_id, relative_path=tile.path|relpath(data_root ~ '/temp/' ~ job_id)) }}" alt="Column {{ tile.column }}">
+        <figcaption>Column {{ tile.column }}</figcaption>
+      </figure>
+    {% endfor %}
+  </div>
+  <div class="mosaic-meta">
+    <span>{% if result.tile_format == "profile_3x4" %}3:4 profile-native{% else %}4:5 feed-safe{% endif %}</span>
+    <span>{% if result.source_mode == "profile" %}3240 x 1440 source canvas{% else %}3106 x 1350 bleed source{% endif %}</span>
+    <span>Visible crop per post: {{ result.visible_tile_size[0] }} x {{ result.visible_tile_size[1] }}</span>
+    <span>Bleed: {{ result.left_bleed }}px left, {{ result.right_bleed }}px right</span>
+    <span>No color fill used</span>
+  </div>
+</section>
+
+<section class="panel">
+  <h1>Upload Order</h1>
+  <div class="upload-order-list">
+    {% for tile in result.upload_tiles %}
+      <article class="upload-order-item">
+        <img src="{{ url_for('temp_file', job_id=job_id, relative_path=tile.path|relpath(data_root ~ '/temp/' ~ job_id)) }}" alt="{{ tile.label }}">
+        <div>
+          <strong>Upload {{ "%02d"|format(tile.upload_order) }}</strong>
+          <span>Column {{ tile.column }}</span>
+        </div>
+        <a href="{{ url_for('download_temp_file', job_id=job_id, relative_path=tile.path|relpath(data_root ~ '/temp/' ~ job_id)) }}">Download</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

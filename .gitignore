@@ -1,0 +1,34 @@
+# Python/runtime artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Local inputs and generated image outputs
+input/
+output/
+*.log
+
+# Web UI runtime storage
+data/assets/
+data/carousels/
+data/projects/
+data/temp/
+
+# Local brand assets can be large or sensitive; keep these opt-in.
+assets/fonts/*
+!assets/fonts/README.md
+assets/local/
+assets/user/
+
+# OS/editor files
+.DS_Store
+.idea/
+.vscode/

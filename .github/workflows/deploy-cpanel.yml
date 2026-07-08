@@ -1,0 +1,152 @@
+name: Deploy to cPanel
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: cpanel-frameedit-deploy
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+  REMOTE_PATH: /home/your-account/frameedit
+  REMOTE_DATA_PATH: /home/your-account/frameedit-data
+
+jobs:
+  deploy:
+    name: Test and deploy
+    runs-on: ubuntu-latest
+
+    env:
+      CPANEL_SSH_HOST: ${{ secrets.CPANEL_SSH_HOST }}
+      CPANEL_SSH_USER: ${{ secrets.CPANEL_SSH_USER }}
+      CPANEL_SSH_PORT: ${{ secrets.CPANEL_SSH_PORT || '22' }}
+      CPANEL_SSH_PRIVATE_KEY: ${{ secrets.CPANEL_SSH_PRIVATE_KEY }}
+      CPANEL_SSH_KNOWN_HOSTS: ${{ secrets.CPANEL_SSH_KNOWN_HOSTS }}
+      CPANEL_VENV_PATH: ${{ secrets.CPANEL_VENV_PATH }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+
+      - name: Run tests
+        run: python -m pytest
+
+      - name: Validate deployment secrets
+        run: |
+          set -euo pipefail
+
+          missing=0
+          for name in CPANEL_SSH_HOST CPANEL_SSH_USER CPANEL_SSH_PRIVATE_KEY; do
+            if [ -z "${!name}" ]; then
+              echo "::error::Missing required GitHub secret: ${name}"
+              missing=1
+            fi
+          done
+
+          if [ "${missing}" -ne 0 ]; then
+            exit 1
+          fi
+
+      - name: Prepare SSH
+        run: |
+          set -euo pipefail
+
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${CPANEL_SSH_PRIVATE_KEY}" > ~/.ssh/cpanel_deploy_key
+          chmod 600 ~/.ssh/cpanel_deploy_key
+
+          if [ -n "${CPANEL_SSH_KNOWN_HOSTS}" ]; then
+            printf '%s\n' "${CPANEL_SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          else
+            ssh-keyscan -p "${CPANEL_SSH_PORT}" "${CPANEL_SSH_HOST}" >> ~/.ssh/known_hosts
+          fi
+
+      - name: Ensure remote app directory exists
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/cpanel_deploy_key -p "${CPANEL_SSH_PORT}" \
+            "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}" \
+            "mkdir -p '${REMOTE_PATH}' '${REMOTE_DATA_PATH}'"
+
+      - name: Sync code to cPanel
+        run: |
+          set -euo pipefail
+
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude '.htaccess' \
+            --exclude '.venv/' \
+            --exclude 'venv/' \
+            --exclude 'env/' \
+            --exclude '__pycache__/' \
+            --exclude '.pytest_cache/' \
+            --exclude '.ruff_cache/' \
+            --exclude '.mypy_cache/' \
+            --exclude '*.pyc' \
+            --exclude '*.pyo' \
+            --exclude '*.log' \
+            --exclude '.DS_Store' \
+            --exclude 'input/' \
+            --exclude 'output/' \
+            --exclude 'data/' \
+            --exclude 'assets/fonts/' \
+            -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
+            ./ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_PATH}/"
+
+      - name: Verify Passenger entrypoint
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/cpanel_deploy_key -p "${CPANEL_SSH_PORT}" \
+            "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}" \
+            "grep -q 'from web_app.app import app as application' '${REMOTE_PATH}/passenger_wsgi.py'"
+
+      - name: Install on cPanel and restart Passenger
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/cpanel_deploy_key -p "${CPANEL_SSH_PORT}" \
+            "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}" \
+            "CPANEL_VENV_PATH='${CPANEL_VENV_PATH}' REMOTE_DATA_PATH='${REMOTE_DATA_PATH}' REMOTE_PATH='${REMOTE_PATH}' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          cd "${REMOTE_PATH}"
+
+          mkdir -p \
+            "${REMOTE_DATA_PATH}/presets" \
+            "${REMOTE_DATA_PATH}/assets/logos" \
+            "${REMOTE_DATA_PATH}/assets/fonts" \
+            "${REMOTE_DATA_PATH}/assets/vignettes" \
+            "${REMOTE_DATA_PATH}/assets/overlays" \
+            "${REMOTE_DATA_PATH}/projects" \
+            "${REMOTE_DATA_PATH}/carousels" \
+            "${REMOTE_DATA_PATH}/temp"
+
+          if [ -n "${CPANEL_VENV_PATH}" ] && [ -x "${CPANEL_VENV_PATH}/bin/python" ]; then
+            "${CPANEL_VENV_PATH}/bin/python" -m pip install --upgrade pip
+            "${CPANEL_VENV_PATH}/bin/python" -m pip install -e .
+          else
+            echo "CPANEL_VENV_PATH is not set or does not contain bin/python; skipping remote pip install."
+            echo "Set CPANEL_VENV_PATH to the cPanel Python app virtualenv path to install dependencies automatically."
+          fi
+
+          mkdir -p tmp
+          touch tmp/restart.txt
+          REMOTE

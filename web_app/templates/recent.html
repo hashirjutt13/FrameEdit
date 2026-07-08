@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Previous Work{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Previous Work</h1>
+  <form method="get" class="filters">
+    <input name="q" value="{{ query }}" placeholder="Search product or brand">
+    <select name="brand">
+      <option value="">All brands</option>
+      {% for preset in presets %}
+        <option value="{{ preset.slug }}" {% if preset.slug == selected_brand %}selected{% endif %}>{{ preset.name }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">Filter</button>
+  </form>
+  <div class="list">
+    {% for project in projects %}
+      <article class="row-card">
+        <div>
+          <strong>{{ project.product_name }}</strong>
+          <span>{{ project.brand_name }} · {{ project.created_at }}</span>
+        </div>
+        <div class="actions">
+          <a href="{{ url_for('project_detail', brand_slug=project.brand_slug, project_slug=project.path.name) }}">Open</a>
+          {% if project.zip_path %}
+            <a href="{{ url_for('download_project_zip', brand_slug=project.brand_slug, project_slug=project.path.name) }}">ZIP</a>
+          {% endif %}
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">No saved All In One projects yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Carousel Panorama{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Carousel Panorama</h1>
+  <form action="{{ url_for('carousel_panorama_generate') }}" method="post" enctype="multipart/form-data" class="grid-form" data-carousel-form data-loading-message="Creating the carousel panorama slides.">
+    <label>
+      Carousel name
+      <input name="carousel_name" placeholder="Collection panorama">
+    </label>
+    <label>
+      Slides
+      <input type="number" name="slide_count" min="2" max="20" value="3" required data-carousel-slide-count>
+    </label>
+    <label>
+      Slide format
+      <select name="slide_format" data-carousel-slide-format>
+        <option value="portrait_3x4">3:4 portrait · 1080 x 1440 · current feed/carousel target</option>
+        <option value="portrait_4x5">4:5 portrait · 1080 x 1350</option>
+        <option value="square_1x1">1:1 square · 1080 x 1080</option>
+      </select>
+    </label>
+    <div class="form-note wide" data-carousel-ratio-note>
+      <strong>Recommended source canvas</strong>
+      <span data-carousel-source-size>3240 x 1440</span>
+      <span data-carousel-source-ratio>ratio 9:4</span>
+      <span>Only this ratio is accepted.</span>
+    </div>
+    <label>
+      Resize behavior
+      <select name="fit_mode">
+        <option value="crop">Crop/resize to panorama canvas</option>
+        <option value="stretch">Stretch resize to panorama canvas</option>
+      </select>
+    </label>
+    <label class="wide">
+      Horizontal source image
+      <input type="file" name="image" required accept=".jpg,.jpeg,.png,.webp,.heic,.heif">
+    </label>
+    <button type="submit" data-loading-text="Generating...">Generate Carousel</button>
+  </form>
+</section>
+
+<section class="panel">
+  <div class="split-head">
+    <div>
+      <h1>Recent Carousels</h1>
+      <p class="muted">Saved panorama carousels generated from this website.</p>
+    </div>
+  </div>
+  <form method="get" class="filters">
+    <input name="q" value="{{ query }}" placeholder="Search carousel name">
+    <button type="submit">Filter</button>
+  </form>
+  <div class="list">
+    {% for carousel in carousels %}
+      <article class="row-card">
+        <div>
+          <strong>{{ carousel.name }}</strong>
+          <span>{{ carousel.created_at }} · {{ carousel.slide_count }} slides · {{ carousel.format_label }}</span>
+        </div>
+        <div class="actions">
+          <a href="{{ url_for('carousel_panorama_detail', carousel_slug=carousel.path.name) }}">Open</a>
+          {% if carousel.zip_path %}
+            <a href="{{ url_for('download_carousel_zip', carousel_slug=carousel.path.name) }}">ZIP</a>
+          {% endif %}
+          <form class="inline-form" action="{{ url_for('carousel_panorama_delete', carousel_slug=carousel.path.name) }}" method="post">
+            <button class="danger" type="submit">Delete</button>
+          </form>
+        </div>
+      </article>
+    {% else %}
+      <p class="muted">No saved carousels yet.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const form = document.querySelector("[data-carousel-form]");
+    if (!form) return;
+
+    const slideCountInput = form.querySelector("[data-carousel-slide-count]");
+    const slideFormatSelect = form.querySelector("[data-carousel-slide-format]");
+    const sourceSize = form.querySelector("[data-carousel-source-size]");
+    const sourceRatio = form.querySelector("[data-carousel-source-ratio]");
+    const specs = {
+      portrait_3x4: {width: 1080, height: 1440},
+      portrait_4x5: {width: 1080, height: 1350},
+      square_1x1: {width: 1080, height: 1080}
+    };
+
+    function gcd(a, b) {
+      while (b) {
+        const next = b;
+        b = a % b;
+        a = next;
+      }
+      return a;
+    }
+
+    function boundedSlideCount() {
+      const raw = Number.parseInt(slideCountInput.value, 10);
+      if (!Number.isFinite(raw)) return 3;
+      return Math.min(20, Math.max(2, raw));
+    }
+
+    function updateRatioHint() {
+      const spec = specs[slideFormatSelect.value] || specs.portrait_3x4;
+      const width = spec.width * boundedSlideCount();
+      const height = spec.height;
+      const divisor = gcd(width, height);
+      sourceSize.textContent = width + " x " + height;
+      sourceRatio.textContent = "ratio " + (width / divisor) + ":" + (height / divisor);
+    }
+
+    slideCountInput.addEventListener("input", updateRatioHint);
+    slideFormatSelect.addEventListener("change", updateRatioHint);
+    updateRatioHint();
+  })();
+</script>
+{% endblock %}

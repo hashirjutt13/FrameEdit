@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">FrameEdit favicon concept 03</title>
+  <desc id="desc">Panorama split favicon mark.</desc>
+  <rect width="64" height="64" rx="14" fill="#121513"/>
+  <rect x="12" y="19" width="40" height="26" rx="7" fill="#f8faf8"/>
+  <path fill="#121513" d="M20 25h8v14h-8zM36 25h8v14h-8z"/>
+  <path fill="#1769ff" d="M28 25h8v14h-8z"/>
+</svg>

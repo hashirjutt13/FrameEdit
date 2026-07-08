@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>{{ title }}</h1>
+  <div class="actions">
+    {% if zip_path %}
+      <a class="button" href="{{ url_for('download_temp_file', job_id=job_id, relative_path=zip_path|relpath(data_root ~ '/temp/' ~ job_id)) }}">Download ZIP</a>
+    {% endif %}
+  </div>
+  <div class="preview-grid">
+    {% for file in files %}
+      <article class="preview-card">
+        <img src="{{ url_for('temp_file', job_id=job_id, relative_path=file.path|relpath(data_root ~ '/temp/' ~ job_id)) }}" alt="{{ file.label }}">
+        <div>{{ file.label }}</div>
+        <a href="{{ url_for('download_temp_file', job_id=job_id, relative_path=file.path|relpath(data_root ~ '/temp/' ~ job_id)) }}">Download</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

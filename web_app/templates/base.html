@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}FrameEdit{% endblock %} | FrameEdit</title>
+    <link rel="icon" href="{{ url_for('static', filename='brand/frameedit-favicon.svg') }}" type="image/svg+xml">
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon-32.png') }}" sizes="32x32" type="image/png">
+    <link rel="icon" href="{{ url_for('static', filename='brand/favicon-16.png') }}" sizes="16x16" type="image/png">
+    <link rel="shortcut icon" href="{{ url_for('favicon_ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='brand/apple-touch-icon.png') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="{{ url_for('index') }}" aria-label="FrameEdit home">
+          <img class="brand-logo" src="{{ url_for('static', filename='brand/frameedit-logo.svg') }}" alt="FrameEdit" width="180" height="30">
+        </a>
+        <nav aria-label="Primary">
+          <a class="nav-link {% if request.endpoint in ['index', 'all_in_one', 'all_in_one_preview', 'all_in_one_generate', 'recent_projects', 'project_detail'] %}active{% endif %}" href="{{ url_for('all_in_one') }}">All In One</a>
+          <a class="nav-link {% if request.endpoint in ['posts_edit', 'posts_preview', 'posts_generate'] %}active{% endif %}" href="{{ url_for('posts_edit') }}">Posts</a>
+          <a class="nav-link {% if request.endpoint in ['grid_mosaic', 'grid_mosaic_generate'] %}active{% endif %}" href="{{ url_for('grid_mosaic') }}">Grid Mosaic</a>
+          <a class="nav-link {% if request.endpoint in ['carousel_panorama', 'carousel_panorama_generate'] %}active{% endif %}" href="{{ url_for('carousel_panorama') }}">Carousel</a>
+          <a class="nav-link {% if request.endpoint in ['reel_cover_edit', 'reel_cover_preview'] %}active{% endif %}" href="{{ url_for('reel_cover_edit') }}">Reel Cover</a>
+          <a class="nav-link {% if request.endpoint and request.endpoint.startswith('settings') %}active{% endif %}" href="{{ url_for('settings') }}">Settings</a>
+        </nav>
+        {% if auth_enabled %}
+          <form class="topbar-action" action="{{ url_for('logout') }}" method="post">
+            <button class="ghost" type="submit">Logout</button>
+          </form>
+        {% endif %}
+      </div>
+    </header>
+    <main class="page">
+      <div id="page-busy" class="page-busy" hidden>
+        <strong>Working...</strong>
+        <span id="page-busy-message">Please wait while the images process.</span>
+      </div>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="messages">
+            {% for category, message in messages %}
+              <div class="message {{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </main>
+    <script>
+      document.addEventListener("submit", function (event) {
+        const form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if (!form.checkValidity()) return;
+
+        const message = form.dataset.loadingMessage || "Please wait while the images process.";
+        const overlay = document.getElementById("page-busy");
+        const overlayMessage = document.getElementById("page-busy-message");
+        if (overlay && overlayMessage) {
+          overlayMessage.textContent = message;
+          overlay.hidden = false;
+        }
+
+        for (const button of form.querySelectorAll("button[type='submit']")) {
+          button.disabled = true;
+          button.dataset.originalText = button.textContent;
+          button.textContent = button.dataset.loadingText || "Working...";
+        }
+      });
+
+      document.addEventListener("change", async function (event) {
+        const select = event.target;
+        if (!(select instanceof HTMLSelectElement)) return;
+        if (!select.classList.contains("js-vignette-live")) return;
+
+        const image = document.getElementById(select.dataset.target || "");
+        const card = select.closest(".preview-card");
+        if (!image || !card) return;
+
+        select.disabled = true;
+        card.classList.add("is-updating");
+
+        const data = new FormData();
+        data.append("job_id", select.dataset.jobId || "");
+        data.append("post_index", select.dataset.postIndex || "0");
+        data.append("vignette", select.value);
+
+        try {
+          const response = await fetch("{{ url_for('preview_post_vignette') }}", {
+            method: "POST",
+            body: data
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload.image_url) {
+            throw new Error(payload.error || "Could not update preview.");
+          }
+          await new Promise((resolve, reject) => {
+            const nextImage = new Image();
+            nextImage.onload = resolve;
+            nextImage.onerror = reject;
+            nextImage.src = payload.image_url;
+          });
+          image.src = payload.image_url;
+        } catch (error) {
+          window.alert(error.message || "Could not update preview.");
+        } finally {
+          card.classList.remove("is-updating");
+          select.disabled = false;
+        }
+      });
+    </script>
+    {% block scripts %}{% endblock %}
+  </body>
+</html>

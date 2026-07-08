@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ project.product_name }}{% endblock %}
+{% block content %}
+<section class="panel">
+  <div class="split-head">
+    <div>
+      <h1>{{ project.product_name }}</h1>
+      <p class="muted">{{ project.brand_name }} · {{ project.created_at }}</p>
+    </div>
+    {% if project.zip_path %}
+      <a class="button" href="{{ url_for('download_project_zip', brand_slug=project.brand_slug, project_slug=project.path.name) }}">Download ZIP</a>
+    {% endif %}
+  </div>
+  <div class="preview-grid">
+    {% for file in files %}
+      <article class="preview-card">
+        <img src="{{ url_for('project_file', brand_slug=project.brand_slug, project_slug=project.path.name, relative_path=file|relpath(project.path)) }}" alt="{{ file.name }}">
+        <div>{{ file.name }}</div>
+        <a href="{{ url_for('download_project_file', brand_slug=project.brand_slug, project_slug=project.path.name, relative_path=file|relpath(project.path)) }}">Download</a>
+      </article>
+    {% endfor %}
+  </div>
+</section>
+
+{% if grid_candidates %}
+  <section class="panel grid-mockup-panel">
+    <div class="split-head">
+      <div>
+        <h2>Instagram Grid Preview</h2>
+        <p class="muted">Preview the profile grid crop measured from Instagram.</p>
+      </div>
+    </div>
+
+    {% if grid_items|length == 3 %}
+      <div class="instagram-grid-editor" data-instagram-grid data-crop-mode="profile" data-save-url="{{ url_for('project_grid_layout_save', brand_slug=project.brand_slug, project_slug=project.path.name) }}">
+        <div class="grid-crop-actions" aria-label="Instagram preview crop">
+          <button type="button" class="ghost active" data-grid-crop="profile">Profile Grid 3:4</button>
+          <button type="button" class="ghost" data-grid-crop="feed">Feed Crop 4:5</button>
+          <button type="button" class="ghost" data-grid-crop="square">Square 1:1</button>
+        </div>
+
+        <div class="instagram-grid-shell">
+          <div class="instagram-grid-row" aria-label="Instagram grid preview">
+            {% for item in grid_items %}
+              <figure class="instagram-grid-tile {% if item.kind == 'reel' %}is-reel{% endif %}" data-grid-tile data-kind="{{ item.kind }}">
+                <img data-grid-image src="{{ url_for('project_file', brand_slug=project.brand_slug, project_slug=project.path.name, relative_path=item.relative_path) }}" alt="{{ item.name }}">
+              </figure>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="grid-layout-actions" aria-label="Move reel cover">
+          <button type="button" class="ghost" data-reel-position="0">Reel Left</button>
+          <button type="button" class="ghost" data-reel-position="1">Reel Center</button>
+          <button type="button" class="ghost" data-reel-position="2">Reel Right</button>
+          <span class="grid-save-status" data-grid-status aria-live="polite"></span>
+        </div>
+
+        <div class="grid-layout-controls">
+          {% for item in grid_items %}
+            <label>
+              Slot {{ loop.index }}
+              <select data-grid-slot-select="{{ loop.index0 }}">
+                {% for candidate in grid_candidates %}
+                  <option
+                    value="{{ candidate.relative_path }}"
+                    data-kind="{{ candidate.kind }}"
+                    data-image-url="{{ url_for('project_file', brand_slug=project.brand_slug, project_slug=project.path.name, relative_path=candidate.relative_path) }}"
+                    {% if candidate.relative_path == item.relative_path %}selected{% endif %}
+                  >
+                    {% if candidate.kind == 'reel' %}Reel{% else %}Post{% endif %} - {{ candidate.name }}
+                  </option>
+                {% endfor %}
+              </select>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+    {% else %}
+      <div class="message warning">
+        This project needs at least one Instagram post PNG and one reel cover PNG to build a grid preview.
+      </div>
+    {% endif %}
+  </section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  (function () {
+    const root = document.querySelector("[data-instagram-grid]");
+    if (!root) return;
+
+    const selects = Array.from(root.querySelectorAll("[data-grid-slot-select]"));
+    const tiles = Array.from(root.querySelectorAll("[data-grid-tile]"));
+    const status = root.querySelector("[data-grid-status]");
+    const saveUrl = root.dataset.saveUrl;
+
+    function selectedOption(select) {
+      return select.options[select.selectedIndex];
+    }
+
+    function syncSlot(index) {
+      const select = selects[index];
+      const tile = tiles[index];
+      if (!select || !tile) return;
+      const option = selectedOption(select);
+      const image = tile.querySelector("[data-grid-image]");
+      if (!option || !image) return;
+
+      image.src = option.dataset.imageUrl;
+      image.alt = option.textContent.trim();
+      tile.dataset.kind = option.dataset.kind || "post";
+      tile.classList.toggle("is-reel", option.dataset.kind === "reel");
+    }
+
+    function syncAll() {
+      selects.forEach(function (_select, index) {
+        syncSlot(index);
+      });
+    }
+
+    async function saveLayout() {
+      if (!saveUrl) return;
+      const layout = selects.map(function (select) {
+        return select.value;
+      });
+
+      if (status) status.textContent = "Saving layout...";
+      root.classList.add("is-saving");
+
+      try {
+        const response = await fetch(saveUrl, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({layout: layout})
+        });
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(payload.error || "Could not save grid layout.");
+        }
+        if (status) status.textContent = "Layout saved";
+      } catch (error) {
+        if (status) status.textContent = error.message || "Could not save grid layout.";
+      } finally {
+        root.classList.remove("is-saving");
+      }
+    }
+
+    function applyReelPosition(position) {
+      const reelOption = selects[0].querySelector("option[data-kind='reel']");
+      const postValues = Array.from(selects[0].querySelectorAll("option[data-kind='post']")).map(function (option) {
+        return option.value;
+      });
+      if (!reelOption || postValues.length === 0) return;
+
+      let postIndex = 0;
+      selects.forEach(function (select, index) {
+        if (index === position) {
+          select.value = reelOption.value;
+          return;
+        }
+        select.value = postValues[postIndex % postValues.length];
+        postIndex += 1;
+      });
+      syncAll();
+      saveLayout();
+    }
+
+    selects.forEach(function (select, index) {
+      select.addEventListener("change", function () {
+        syncSlot(index);
+        saveLayout();
+      });
+    });
+
+    root.querySelectorAll("[data-reel-position]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        applyReelPosition(Number(button.dataset.reelPosition));
+      });
+    });
+
+    root.querySelectorAll("[data-grid-crop]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        root.dataset.cropMode = button.dataset.gridCrop || "profile";
+        root.querySelectorAll("[data-grid-crop]").forEach(function (nextButton) {
+          nextButton.classList.toggle("active", nextButton === button);
+        });
+      });
+    });
+  })();
+</script>
+{% endblock %}

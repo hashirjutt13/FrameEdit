@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Edit Preset{% endblock %}
+{% set post = raw.get('post', {}) %}
+{% set post_logo = post.get('logo', {}) %}
+{% set vignettes = post.get('vignettes', {}) %}
+{% set webp = raw.get('webp_variant', {}) %}
+{% set reel = raw.get('reel_cover', {}) %}
+{% set reel_logo = reel.get('logo', {}) %}
+{% set blur = reel.get('background_blur', {}) %}
+{% set overlay = reel.get('black_overlay', {}) %}
+{% set product = reel.get('product_name', {}) %}
+{% set category = reel.get('category_name', {}) %}
+{% set brand = raw.get('brand', {}) %}
+{% block content %}
+<section class="panel">
+  <div class="split-head">
+    <div>
+      <h1>Edit Preset</h1>
+      <p class="muted">{{ brand.get('slug', '') }}</p>
+    </div>
+    {% if preset %}
+      <div class="actions">
+        <form action="{{ url_for('settings_rename_preset', slug=preset.slug) }}" method="post" class="inline-form" data-loading-message="Renaming preset.">
+          <input name="name" value="{{ preset.name }}" required>
+          <button type="submit">Rename</button>
+        </form>
+        <form action="{{ url_for('settings_delete_preset', slug=preset.slug) }}" method="post" data-loading-message="Deleting preset.">
+          <button class="danger" type="submit">Delete</button>
+        </form>
+      </div>
+    {% endif %}
+  </div>
+
+  <form method="post" class="preset-form" data-loading-message="Saving preset settings.">
+    <h2>Brand</h2>
+    <label>Brand name <input name="brand_name" value="{{ brand.get('name', '') }}" required></label>
+    <label>Input dir <input name="input_dir" value="{{ raw.get('input_dir', '../../input') }}"></label>
+    <label>Output dir <input name="output_dir" value="{{ raw.get('output_dir', '../../output') }}"></label>
+    <label class="check"><input type="checkbox" name="scan_recursive" {% if raw.get('scan_recursive') %}checked{% endif %}> Recursive scan</label>
+    <label class="check"><input type="checkbox" name="overwrite" {% if raw.get('overwrite', true) %}checked{% endif %}> Overwrite outputs</label>
+    <label>Aspect tolerance <input type="number" step="0.001" name="aspect_ratio_tolerance" value="{{ raw.get('aspect_ratio_tolerance', 0.02) }}"></label>
+
+    <h2>Post</h2>
+    <label>Width <input type="number" name="post_width" value="{{ post.get('size', [1080, 1440])[0] }}"></label>
+    <label>Height <input type="number" name="post_height" value="{{ post.get('size', [1080, 1440])[1] }}"></label>
+    <label>Default vignette
+      <select name="post_default_vignette">
+        {% for key in ['centered', 'top', 'bottom'] %}
+          <option value="{{ key }}" {% if post.get('default_vignette') == key %}selected{% endif %}>{{ key }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <label>Vignette opacity <input type="number" step="0.01" name="post_vignette_opacity" value="{{ post.get('vignette_opacity', 1.0) }}"></label>
+    <label>Center vignette <input name="vignette_centered" value="{{ vignettes.get('centered', '') }}"></label>
+    <label>Top vignette <input name="vignette_top" value="{{ vignettes.get('top', '') }}"></label>
+    <label>Bottom vignette <input name="vignette_bottom" value="{{ vignettes.get('bottom', '') }}"></label>
+    {{ logo_fields('post', post_logo, 100) }}
+
+    <h2>WebP</h2>
+    <label class="check"><input type="checkbox" name="webp_enabled" {% if webp.get('enabled', true) %}checked{% endif %}> Enabled</label>
+    <label class="check"><input type="checkbox" name="webp_include_logo" {% if webp.get('include_logo', true) %}checked{% endif %}> Include logo</label>
+    <label class="check"><input type="checkbox" name="webp_lossless" {% if webp.get('lossless', true) %}checked{% endif %}> Lossless</label>
+    <label>Quality <input type="number" name="webp_quality" value="{{ webp.get('quality', 100) }}"></label>
+    <label>Method <input type="number" name="webp_method" value="{{ webp.get('method', 6) }}"></label>
+
+    <h2>Reel Cover</h2>
+    <label>Width <input type="number" name="reel_width" value="{{ reel.get('size', [1080, 1920])[0] }}"></label>
+    <label>Height <input type="number" name="reel_height" value="{{ reel.get('size', [1080, 1920])[1] }}"></label>
+    <label class="check"><input type="checkbox" name="blur_enabled" {% if blur.get('enabled') %}checked{% endif %}> Blur background</label>
+    <label>Blur intensity <input type="number" step="0.01" name="blur_intensity" value="{{ blur.get('intensity', 0.06) }}"></label>
+    <label>Blur max radius <input type="number" step="1" name="blur_max_radius" value="{{ blur.get('max_radius', 100) }}"></label>
+    <label>Black overlay file <input name="black_overlay_file" value="{{ overlay.get('file', '') }}"></label>
+    <label>Black overlay opacity <input type="number" step="0.01" name="black_overlay_opacity" value="{{ overlay.get('opacity', 0.6) }}"></label>
+    {{ logo_fields('reel', reel_logo, 342) }}
+
+    <h2>Product Text</h2>
+    {{ text_fields('product', product, true) }}
+
+    <h2>Category Text</h2>
+    {{ text_fields('category', category, false) }}
+
+    <button type="submit" data-loading-text="Saving...">Save Preset</button>
+  </form>
+</section>
+{% endblock %}
+
+{% macro logo_fields(prefix, logo, default_y) %}
+  <label>{{ prefix|title }} logo file <input name="{{ prefix }}_logo_file" value="{{ logo.get('file', '') }}"></label>
+  <label>{{ prefix|title }} logo scale <input type="number" step="0.001" name="{{ prefix }}_logo_scale" value="{{ logo.get('scale', 0.2) }}"></label>
+  <label>{{ prefix|title }} logo X <input type="number" name="{{ prefix }}_logo_center_x" value="{{ logo.get('center', [540, default_y])[0] }}"></label>
+  <label>{{ prefix|title }} logo Y <input type="number" name="{{ prefix }}_logo_center_y" value="{{ logo.get('center', [540, default_y])[1] }}"></label>
+  <label>{{ prefix|title }} logo opacity <input type="number" step="0.01" name="{{ prefix }}_logo_opacity" value="{{ logo.get('opacity', 1.0) }}"></label>
+{% endmacro %}
+
+{% macro text_fields(prefix, text, auto_default) %}
+  <label>Text <input name="{{ prefix }}_text" value="{{ text.get('text', '') }}"></label>
+  <label>Font <input name="{{ prefix }}_font" value="{{ text.get('font', '') }}"></label>
+  <label>Size <input type="number" name="{{ prefix }}_size" value="{{ text.get('size', 100) }}"></label>
+  <label>X <input type="number" name="{{ prefix }}_center_x" value="{{ text.get('center', [540, 950])[0] }}"></label>
+  <label>Y <input type="number" name="{{ prefix }}_center_y" value="{{ text.get('center', [540, 950])[1] }}"></label>
+  <label>Color <input name="{{ prefix }}_color" value="{{ text.get('color', '#e1d9cb') }}"></label>
+  <input type="hidden" name="{{ prefix }}_auto_multiline" value="0">
+  <label class="check"><input type="checkbox" name="{{ prefix }}_auto_multiline" {% if text.get('auto_multiline', auto_default) %}checked{% endif %}> Auto multiline</label>
+  <label>Max width <input type="number" name="{{ prefix }}_max_width" value="{{ text.get('max_width') or '' }}"></label>
+  <label>Line spacing <input type="number" step="0.01" name="{{ prefix }}_line_spacing" value="{{ text.get('line_spacing', 1.05) }}"></label>
+  <label>Letter spacing <input type="number" step="1" name="{{ prefix }}_letter_spacing" value="{{ text.get('letter_spacing', 0) }}"></label>
+  <input type="hidden" name="{{ prefix }}_last_word_second_line" value="0">
+  <label class="check"><input type="checkbox" name="{{ prefix }}_last_word_second_line" {% if text.get('last_word_second_line') %}checked{% endif %}> Last word on second line</label>
+{% endmacro %}

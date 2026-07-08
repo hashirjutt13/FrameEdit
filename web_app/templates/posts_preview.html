@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Preview Posts{% endblock %}
+{% block content %}
+<section class="panel">
+  <h1>Preview Posts</h1>
+  {% if upload_set.unsupported %}
+    <div class="message error">Some uploads were rejected because they are not supported post images.</div>
+  {% endif %}
+  <form action="{{ url_for('posts_generate') }}" method="post" class="stack" data-loading-message="Generating post outputs and ZIP.">
+    <input type="hidden" name="job_id" value="{{ job_id }}">
+    <div class="preview-grid">
+      {% for post in upload_set.posts %}
+        {% set file = preview_files[loop.index0] %}
+        <article class="preview-card">
+          <div class="preview-image-wrap">
+            <img id="post-preview-{{ loop.index0 }}" src="{{ url_for('temp_file', job_id=job_id, relative_path=file.path|relpath(data_root ~ '/temp/' ~ job_id)) }}" alt="{{ file.label }}">
+            <div class="preview-loading" aria-live="polite">Updating preview...</div>
+          </div>
+          <div class="preview-meta">
+            <strong>{{ file.label }}</strong>
+            <span>{{ post.filename }}</span>
+          </div>
+          <label class="preview-control">
+            Vignette
+            <select name="vignette_{{ loop.index0 }}" class="js-vignette-live" data-job-id="{{ job_id }}" data-post-index="{{ loop.index0 }}" data-target="post-preview-{{ loop.index0 }}">
+              <option value="center">Center</option>
+              <option value="top">Top</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </label>
+        </article>
+      {% endfor %}
+    </div>
+    <div class="form-actions">
+      <button type="submit" data-loading-text="Generating...">Generate Posts</button>
+    </div>
+  </form>
+</section>
+{% endblock %}
