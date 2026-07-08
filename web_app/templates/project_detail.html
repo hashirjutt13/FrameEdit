@@ -27,15 +27,15 @@
     <div class="split-head">
       <div>
         <h2>Instagram Grid Preview</h2>
-        <p class="muted">Preview the profile grid crop measured from Instagram.</p>
+        <p class="muted">Preview the row crop before uploading.</p>
       </div>
     </div>
 
     {% if grid_items|length == 3 %}
       <div class="instagram-grid-editor" data-instagram-grid data-crop-mode="profile" data-save-url="{{ url_for('project_grid_layout_save', brand_slug=project.brand_slug, project_slug=project.path.name) }}">
         <div class="grid-crop-actions" aria-label="Instagram preview crop">
-          <button type="button" class="ghost active" data-grid-crop="profile">Profile Grid 3:4</button>
-          <button type="button" class="ghost" data-grid-crop="feed">Feed Crop 4:5</button>
+          <button type="button" class="ghost active" data-grid-crop="profile">Profile 3:4</button>
+          <button type="button" class="ghost" data-grid-crop="feed">Feed 4:5</button>
           <button type="button" class="ghost" data-grid-crop="square">Square 1:1</button>
         </div>
 

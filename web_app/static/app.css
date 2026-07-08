@@ -571,15 +571,6 @@ button:disabled {
   object-fit: cover;
 }
 
-.instagram-grid-editor[data-crop-mode="profile"] .instagram-grid-tile.is-reel img {
-  object-position: 50% 60%;
-}
-
-.instagram-grid-editor[data-crop-mode="feed"] .instagram-grid-tile.is-reel img,
-.instagram-grid-editor[data-crop-mode="square"] .instagram-grid-tile.is-reel img {
-  object-position: 50% 50%;
-}
-
 .instagram-grid-tile.is-reel::after {
   content: "";
   position: absolute;
