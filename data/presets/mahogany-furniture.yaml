@@ -20,9 +20,9 @@ post:
   default_vignette: centered
   vignette_opacity: 1.0
   vignettes:
-    centered: ../../assets/vignettes/centered.png
-    top: ../../assets/vignettes/top.png
-    bottom: ../../assets/vignettes/bottom.png
+    centered: ../assets/vignettes/centered.png
+    top: ../assets/vignettes/top.png
+    bottom: ../assets/vignettes/bottom.png
   logo:
     file: ../assets/logos/mahogany-logo-original-no-bg.png
     scale: 0.23
@@ -45,7 +45,7 @@ reel_cover:
     intensity: 0.06
     max_radius: 100
   black_overlay:
-    file: ../../assets/black_9x16.png
+    file: ../assets/overlays/black_9x16.png
     opacity: 0.6
   logo:
     file: ../assets/logos/mahogany-logo-original-no-bg.png

@@ -119,7 +119,7 @@ CPANEL_SSH_KNOWN_HOSTS=known_hosts line for the cPanel server
 CPANEL_VENV_PATH=/home/ismails1/virtualenv/framekit/3.13
 ```
 
-The workflow excludes runtime folders such as `data/`, `input/`, `output/`, `.venv/`, and `.htaccess` so deploys do not overwrite uploads, generated projects, or cPanel-managed server config. It also checks SSH connectivity before syncing files so authentication problems are easier to diagnose.
+The workflow excludes runtime folders such as `data/`, `input/`, `output/`, `.venv/`, and `.htaccess` from the application-code sync so deploys do not overwrite generated projects or cPanel-managed server config. It then separately syncs bundled presets and deployable brand assets from `data/presets/` and `data/assets/` into `REMOTE_DATA_PATH` without deleting existing runtime uploads. It also checks SSH connectivity before syncing files so authentication problems are easier to diagnose.
 
 ## Smoke Check
 

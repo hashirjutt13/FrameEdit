@@ -121,6 +121,34 @@ jobs:
             -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
             ./ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_PATH}/"
 
+      - name: Sync bundled presets and assets to runtime data
+        run: |
+          set -euo pipefail
+
+          ssh -i ~/.ssh/cpanel_deploy_key -p "${CPANEL_SSH_PORT}" \
+            "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}" \
+            "mkdir -p '${REMOTE_DATA_PATH}/presets' '${REMOTE_DATA_PATH}/assets/logos' '${REMOTE_DATA_PATH}/assets/fonts' '${REMOTE_DATA_PATH}/assets/vignettes' '${REMOTE_DATA_PATH}/assets/overlays'"
+
+          rsync -az \
+            -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
+            data/presets/ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_DATA_PATH}/presets/"
+
+          rsync -az \
+            -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
+            data/assets/logos/ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_DATA_PATH}/assets/logos/"
+
+          rsync -az \
+            -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
+            data/assets/fonts/ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_DATA_PATH}/assets/fonts/"
+
+          rsync -az \
+            -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
+            data/assets/vignettes/ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_DATA_PATH}/assets/vignettes/"
+
+          rsync -az \
+            -e "ssh -i ~/.ssh/cpanel_deploy_key -p ${CPANEL_SSH_PORT}" \
+            data/assets/overlays/ "${CPANEL_SSH_USER}@${CPANEL_SSH_HOST}:${REMOTE_DATA_PATH}/assets/overlays/"
+
       - name: Verify Passenger entrypoint
         run: |
           set -euo pipefail

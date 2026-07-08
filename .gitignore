@@ -25,6 +25,10 @@ data/assets/*
 !data/assets/logos/**
 !data/assets/fonts/
 !data/assets/fonts/**
+!data/assets/vignettes/
+!data/assets/vignettes/**
+!data/assets/overlays/
+!data/assets/overlays/**
 
 # Local brand assets can be large or sensitive; keep these opt-in.
 assets/fonts/*

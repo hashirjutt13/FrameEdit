@@ -124,3 +124,4 @@ Record meaningful implementation decisions here. Keep entries short and dated.
 
 - Made `data/assets/logos/` and `data/assets/fonts/` deployable through git so selected brand assets appear on the hosted Web UI after deployment.
 - Added a `Mahogany Furniture` preset that references tracked Mahogany logo, Migra product font, and Sloop category font assets.
+- Updated the cPanel workflow to sync bundled presets, logos, fonts, vignettes, and overlays into runtime data without deleting existing uploads or projects.
