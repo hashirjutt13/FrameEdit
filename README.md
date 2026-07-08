@@ -95,8 +95,8 @@ The Web UI includes:
 
 ## Demo Documentation
 
-- [Mahogany Furniture demo walkthrough](docs/mahogany-demo-walkthrough.md)
-- [LinkedIn launch post guide](docs/linkedin-post-guide.md)
+- [FrameEdit demo walkthrough with All In One, Grid Mosaic, and Carousel screenshots](docs/mahogany-demo-walkthrough.md)
+- [LinkedIn launch post guide with recommended image order](docs/linkedin-post-guide.md)
 
 ## Output Structure
 
