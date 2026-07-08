@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 from frameedit.web_services.carousel_projects import list_carousel_projects
+from frameedit.web_services.presets import load_preset
 from frameedit.web_services.projects import create_project_dir, list_projects, write_project_metadata
 from web_app.app import create_app
 
@@ -95,6 +98,32 @@ def test_auth_gate_when_password_enabled(tmp_path: Path) -> None:
     response = client.post("/login", data={"password": "secret"}, follow_redirects=True)
     assert response.status_code == 200
     assert b"All In One Edit" in response.data
+
+
+def test_settings_imports_preset_json_and_local_assets(app) -> None:
+    client = app.test_client()
+
+    settings = client.get("/settings")
+    assert settings.status_code == 200
+    assert b"Import JSON" in settings.data
+    assert b"Import Local Logos and Fonts" in settings.data
+
+    raw = yaml.safe_load((app.config["DATA_DIR"] / "presets" / "test-brand.yaml").read_text(encoding="utf-8"))
+    raw["brand"] = {"name": "Imported Brand", "slug": "imported-brand"}
+    raw["post"]["logo"]["scale"] = 0.31
+    imported = client.post(
+        "/settings/presets/import-json",
+        data={"target_slug": "__new__", "preset_json_text": json.dumps(raw)},
+        follow_redirects=True,
+    )
+    assert imported.status_code == 200
+    assert b"Preset imported." in imported.data
+    assert load_preset("imported-brand", app.config["DATA_DIR"]).config.post.logo.scale == 0.31
+
+    seeded = client.post("/settings/assets/seed-local", follow_redirects=True)
+    assert seeded.status_code == 200
+    assert b"local assets" in seeded.data
+    assert (app.config["DATA_DIR"] / "assets" / "logos" / "logo-placeholder.png").exists()
 
 
 def test_all_in_one_preview_and_generate_zip(app) -> None:

@@ -209,6 +209,7 @@ label {
 
 input,
 select,
+textarea,
 button,
 .button {
   min-height: 40px;
@@ -219,7 +220,8 @@ button,
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   padding: 8px 12px;
   background: var(--surface);
@@ -235,9 +237,16 @@ input[type="file"] {
 }
 
 input:focus,
-select:focus {
+select:focus,
+textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgb(0 112 243 / 14%);
+}
+
+textarea {
+  min-height: 140px;
+  resize: vertical;
+  font-family: var(--font-mono);
 }
 
 button,
@@ -883,6 +892,20 @@ button:disabled {
   margin-bottom: 16px;
   padding-top: 0;
   border-top: 0;
+}
+
+.import-form {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface-soft);
+}
+
+.asset-seed-form {
+  margin-bottom: 16px;
 }
 
 .asset-form {

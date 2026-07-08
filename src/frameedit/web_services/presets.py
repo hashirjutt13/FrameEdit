@@ -104,6 +104,29 @@ def save_preset(slug: str, raw: dict[str, Any], root: Path | None = None) -> Bra
     return load_preset(clean_slug, root)
 
 
+def import_preset_json(
+    payload: dict[str, Any],
+    root: Path | None = None,
+    *,
+    target_slug: str | None = None,
+    fallback_slug: str = "imported-preset",
+) -> BrandPreset:
+    raw = _preset_payload(payload)
+    brand = raw.get("brand", {}) if isinstance(raw.get("brand"), dict) else {}
+    if target_slug:
+        slug = slugify(target_slug, fallback=fallback_slug)
+    else:
+        desired_slug = str(brand.get("slug") or brand.get("name") or fallback_slug)
+        slug = _available_slug(slugify(desired_slug, fallback=fallback_slug), root)
+
+    raw = dict(raw)
+    raw["brand"] = {
+        "name": str(brand.get("name") or slug.replace("-", " ").title()).strip(),
+        "slug": slug,
+    }
+    return save_preset(slug, raw, root)
+
+
 def create_preset(name: str, root: Path | None = None) -> BrandPreset:
     default = load_preset(DEFAULT_PRESET_SLUG, root)
     slug = _available_slug(slugify(name, fallback="brand"), root)
@@ -148,6 +171,18 @@ def _read_yaml(path: Path) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise PresetError(f"Preset root must be a mapping: {path}")
     return raw
+
+
+def _preset_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(payload, dict):
+        raise PresetError("Preset JSON root must be an object.")
+
+    for key in ("preset", "settings"):
+        nested = payload.get(key)
+        if isinstance(nested, dict):
+            return dict(nested)
+
+    return dict(payload)
 
 
 def _available_slug(slug: str, root: Path | None, *, allow: str | None = None) -> str:

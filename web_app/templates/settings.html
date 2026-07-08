@@ -10,6 +10,19 @@
         <input name="name" placeholder="New brand name" required>
         <button type="submit">Create</button>
       </form>
+      <form action="{{ url_for('settings_import_preset_json') }}" method="post" enctype="multipart/form-data" class="import-form" data-loading-message="Importing preset JSON.">
+        <label>Import JSON file <input type="file" name="preset_json" accept=".json,application/json"></label>
+        <label>Or paste JSON <textarea name="preset_json_text" rows="7" spellcheck="false"></textarea></label>
+        <label>Import target
+          <select name="target_slug">
+            <option value="__new__">Create new preset</option>
+            {% for preset in presets %}
+              <option value="{{ preset.slug }}">Update {{ preset.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <button type="submit">Import JSON</button>
+      </form>
       <div class="list">
         {% for preset in presets %}
           <article class="row-card">
@@ -30,6 +43,9 @@
 
     <section>
       <h2>Assets</h2>
+      <form action="{{ url_for('settings_seed_local_assets') }}" method="post" class="asset-seed-form" data-loading-message="Importing local assets.">
+        <button type="submit" class="ghost">Import Local Logos and Fonts</button>
+      </form>
       {% for kind, assets in asset_groups.items() %}
         <form action="{{ url_for('settings_upload_asset', kind=kind) }}" method="post" enctype="multipart/form-data" class="asset-form" data-loading-message="Uploading asset.">
           <label>
