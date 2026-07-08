@@ -17,10 +17,14 @@ output/
 *.log
 
 # Web UI runtime storage
-data/assets/
 data/carousels/
 data/projects/
 data/temp/
+data/assets/*
+!data/assets/logos/
+!data/assets/logos/**
+!data/assets/fonts/
+!data/assets/fonts/**
 
 # Local brand assets can be large or sensitive; keep these opt-in.
 assets/fonts/*

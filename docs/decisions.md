@@ -119,3 +119,8 @@ Record meaningful implementation decisions here. Keep entries short and dated.
 
 - Added a Settings import path that accepts preset/config settings as JSON, validates them through the shared preset loader, and saves them back as YAML presets.
 - Added local logo/font seeding into ignored `data/assets/` storage so project logos and brand fonts can be made available to the Web UI without committing user assets.
+
+## 2026-07-08: Deployable Mahogany Brand Assets
+
+- Made `data/assets/logos/` and `data/assets/fonts/` deployable through git so selected brand assets appear on the hosted Web UI after deployment.
+- Added a `Mahogany Furniture` preset that references tracked Mahogany logo, Migra product font, and Sloop category font assets.
