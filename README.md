@@ -93,6 +93,11 @@ The Web UI includes:
 - Carousel: split one panorama into 2-20 Instagram carousel slides.
 - Settings: manage presets and upload reusable logos, fonts, and vignettes.
 
+## Demo Documentation
+
+- [Mahogany Furniture demo walkthrough](docs/mahogany-demo-walkthrough.md)
+- [LinkedIn launch post guide](docs/linkedin-post-guide.md)
+
 ## Output Structure
 
 ```text
